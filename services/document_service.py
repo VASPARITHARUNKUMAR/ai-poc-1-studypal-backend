@@ -1,7 +1,7 @@
 import os
 import uuid
-from langchain.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
-from backend.services.vector_service import store_in_vector_db
+from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
+from .vector_service import store_in_vector_db
 
 UPLOAD_DIR = "./uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
