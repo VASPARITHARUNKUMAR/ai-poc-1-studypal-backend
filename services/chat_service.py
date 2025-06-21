@@ -1,6 +1,6 @@
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.llms import Ollama, OpenAI
+from langchain_community.llms import OpenAI, Ollama
 
 embedding = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 CHROMA_DIR = "./vectordb"
