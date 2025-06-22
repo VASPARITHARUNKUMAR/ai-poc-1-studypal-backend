@@ -1,22 +1,22 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI
+from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from services import document_service, chat_service
-from models import DocumentUploadRequest, ChatRequest
+from groq_service import ask_groq
+
+class ChatRequest(BaseModel):
+    query: str
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # update this in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.post("/upload")
-async def upload_document(file: UploadFile = File(...), semester: str = Form(...), subject: str = Form(...)):
-    return await document_service.process_upload(file, semester, subject)
-
 @app.post("/chat")
-async def chat(query: ChatRequest):
-    return await chat_service.answer_question(query)
+async def chat(request: ChatRequest):
+    response = ask_groq(request.query)
+    return {"response": response}
