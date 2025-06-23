@@ -1,39 +1,29 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, UploadFile, File, Form
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-import asyncio
-from enum import Enum
-
 from groq_service import ask_groq
 from ollama_service import ask_ollama
-
-class ModelName(str, Enum):
-    groq = "groq"
-    ollama = "ollama"
+from document_service import ingest_document
+from vector_store import query_rag
+import os
 
 class ChatRequest(BaseModel):
     query: str
-    model: ModelName
+    model: str  # groq or ollama
 
 app = FastAPI()
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@app.post("/upload")
+async def upload(file: UploadFile = File(...), semester: str = Form(...), subject: str = Form(...)):
+    return ingest_document(file, semester, subject)
 
 @app.post("/chat")
 async def chat(req: ChatRequest):
-    loop = asyncio.get_running_loop()
-    try:
-        if req.model == ModelName.groq:
-            response = await loop.run_in_executor(None, ask_groq, req.query)
-        elif req.model == ModelName.ollama:
-            response = await loop.run_in_executor(None, ask_ollama, req.query)
+    if req.model in ["groq", "ollama"]:
+        context = query_rag(req.query)
+        if req.model == "groq":
+            return {"response": ask_groq(req.query, context)}
         else:
-            raise HTTPException(status_code=400, detail="Invalid model selected")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error calling model: {str(e)}")
-    return {"response": response}
+            return {"response": ask_ollama(req.query, context)}
+    return {"response": "Invalid model"}

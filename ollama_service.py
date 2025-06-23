@@ -1,25 +1,9 @@
 import requests
-import json
 
-def ask_ollama(prompt: str) -> str:
+def ask_ollama(query: str, context: str = "") -> str:
+    payload = {"model": "deepseek-r1:1.5b", "prompt": context + "\n\n" + query}
     try:
-        response = requests.post(
-            "http://localhost:11434/api/generate",
-            json={"model": "deepseek-r1:1.5b", "prompt": prompt},
-            timeout=90  # increased timeout
-        )
-
-        output = ""
-        for line in response.iter_lines():
-            if line:
-                try:
-                    data = json.loads(line.decode("utf-8"))
-                    if "response" in data:
-                        output += data["response"]
-                except json.JSONDecodeError:
-                    continue  # Skip bad chunks
-
-        return output.strip() or "⚠️ No content received from Ollama"
-
+        response = requests.post("http://localhost:11434/api/generate", json=payload, timeout=20)
+        return response.json().get("response", "❌ No response")
     except Exception as e:
         return f"❌ Error from Ollama: {e}"

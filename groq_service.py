@@ -4,25 +4,33 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Print API key for debugging
-print(f"✅ GROQ API Key: {os.getenv('GROQ_API_KEY')}")
-openai.api_key = os.getenv("GROQ_API_KEY")
-openai.api_base = "https://api.groq.com/openai/v1"
+def ask_groq(query: str, context: str = "") -> str:
+    api_key = os.getenv("GROQ_API_KEY")
+    if not api_key:
+        return "❌ GROQ_API_KEY not found in environment variables."
 
-def ask_groq(prompt: str) -> str:
-    print(f"⏳ Asking Groq: {prompt}")
+    openai.api_key = api_key
+    openai.api_base = "https://api.groq.com/openai/v1"
+
     try:
+        messages = [
+            {"role": "system", "content": "Answer based on context."}
+        ]
+
+        if context:
+            messages.append({"role": "user", "content": context + "\n\n" + query})
+        else:
+            messages.append({"role": "user", "content": query})
+
         response = openai.ChatCompletion.create(
-            model="llama3-8b-8192",  # fastest Groq model
-            messages=[
-                {"role": "system", "content": "You are a helpful study assistant."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.5,
-            timeout=10
+            model="llama3-8b-8192",
+            messages=messages,
+            timeout=30
         )
-        print("✅ Got response from Groq.")
-        return response.choices[0].message["content"].strip()
+        return response.choices[0].message.content
+
+    except openai.error.OpenAIError as e:
+        return f"❌ Error from Groq API: {e}"
+
     except Exception as e:
-        print(f"❌ Groq API Error: {e}")
-        return f"⚠️ Error: {str(e)}"
+        return f"❌ Unexpected error: {e}"
