@@ -6,8 +6,7 @@ def ask_ollama(prompt: str) -> str:
         response = requests.post(
             "http://localhost:11434/api/generate",
             json={"model": "deepseek-r1:1.5b", "prompt": prompt},
-            timeout=30,
-            stream=True  # IMPORTANT: enables line-by-line streaming
+            timeout=90  # increased timeout
         )
 
         output = ""
