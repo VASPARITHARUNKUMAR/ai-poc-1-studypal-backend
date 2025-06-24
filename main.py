@@ -1,6 +1,3 @@
-import certifi
-import os
-os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 from fastapi import FastAPI, UploadFile, File, Form
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,7 +6,6 @@ from ollama_service import ask_ollama
 from document_service import ingest_document
 from vector_store import query_rag
 import os
-os.environ["CURL_CA_BUNDLE"] = ""
 
 class ChatRequest(BaseModel):
     query: str
@@ -31,3 +27,8 @@ async def chat(req: ChatRequest):
         else:
             return {"response": ask_ollama(req.query, context)}
     return {"response": "Invalid model"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="127.0.0.1", port=9000, reload=True)
