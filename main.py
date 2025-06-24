@@ -1,3 +1,6 @@
+import certifi
+import os
+os.environ["REQUESTS_CA_BUNDLE"] = certifi.where()
 from fastapi import FastAPI, UploadFile, File, Form
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +9,7 @@ from ollama_service import ask_ollama
 from document_service import ingest_document
 from vector_store import query_rag
 import os
+os.environ["CURL_CA_BUNDLE"] = ""
 
 class ChatRequest(BaseModel):
     query: str
