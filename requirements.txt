@@ -9,4 +9,4 @@ langchain-ollama==0.3.3
 chromadb
 docx2txt
 python-multipart
-openai
+openainltk==3.8.1

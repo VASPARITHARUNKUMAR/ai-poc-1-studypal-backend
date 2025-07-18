@@ -1,5 +1,4 @@
 import requests
-
 def ask_ollama(query: str, context: str = "") -> str:
     payload = {"model": "deepseek-r1:1.5b", "prompt": context + "\n\n" + query}
     try:
