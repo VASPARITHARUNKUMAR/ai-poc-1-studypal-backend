@@ -1,41 +1,48 @@
 import logging
 from typing import List
-from langchain_chroma import Chroma
 from langchain_community.vectorstores import Chroma
-from langchain.embeddings import HuggingFaceBgeEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings  # Use langchain_huggingface per deprecation warnings
+
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Setup embedding and vectorstore
-embedding_model = HuggingFaceBgeEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
-chroma_store = Chroma(persist_directory="db", embedding_function=embedding_model)
+# Setup embedding model (updated import and usage)
+embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
-def save_to_vector_store(documents):
-    try:
-        print("Saving documents directly to vector store without chunking...")
-        chroma_store = Chroma.from_documents(documents, embedding)
-        # chroma_store.persist()  # ❌ REMOVE or COMMENT this line
-    except Exception as e:
-        print(f"Failed to save documents to vector store: {e}")
-        raise
-def query_rag(query: str, top_k: int = 3) -> str:
+# Initialize Chroma vector store (empty at start)
+# You can instantiate this here or inside save function if you want to reload each time.
+chroma_store = None
+
+def save_to_vector_store(documents: List) -> None:
     """
-    Retrieves relevant documents from vector store using the query.
+    Save documents directly to the Chroma vector store without chunking.
 
     Args:
-        query (str): The query string.
-        top_k (int): Number of top documents to retrieve.
-
-    Returns:
-        str: Concatenated contents of relevant documents.
+        documents (List[Document]): List of LangChain Document objects.
     """
+    global chroma_store
+    try:
+        logger.info("Saving documents directly to vector store without chunking...")
+        # Create a new vector store from documents and embeddings
+        chroma_store = Chroma.from_documents(documents, embedding)
+        logger.info(f"Saved {len(documents)} documents to Chroma vector store.")
+        # Note: No need to call persist() with this Chroma version
+    except Exception as e:
+        logger.error(f"Failed to save documents to vector store: {e}", exc_info=True)
+        raise
+
+def query_rag(query: str, top_k: int = 3) -> str:
+    global chroma_store
+    if chroma_store is None:
+        logger.error("Vector store is not initialized. Please add documents first.")
+        return "Vector store not initialized."
+
     try:
         logger.info(f"Querying vector store with query: '{query}'")
         retriever = chroma_store.as_retriever(search_kwargs={"k": top_k})
-
-        # Correct way to call retriever per latest LangChain version
-        docs = retriever.invoke(query)  # or docs = retriever(query)
+        # Use get_relevant_documents to fetch documents
+        docs = retriever.get_relevant_documents(query)
 
         logger.info(f"Retrieved {len(docs)} documents.")
         return "\n".join(doc.page_content for doc in docs)
