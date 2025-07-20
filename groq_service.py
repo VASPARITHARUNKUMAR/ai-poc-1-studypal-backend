@@ -23,7 +23,7 @@ def ask_groq(query: str, context: str = "") -> str:
             messages.append({"role": "user", "content": query})
 
         response = openai.ChatCompletion.create(
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             messages=messages,
             timeout=30
         )

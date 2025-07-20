@@ -15,12 +15,6 @@ embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L
 chroma_store = None
 
 def save_to_vector_store(documents: List[Document]) -> None:
-    """
-    Save raw documents directly to the Chroma vector store without any chunking.
-
-    Args:
-        documents (List[Document]): List of LangChain Document objects.
-    """
     global chroma_store
     try:
         logger.info("Saving raw documents to vector store...")
@@ -31,16 +25,6 @@ def save_to_vector_store(documents: List[Document]) -> None:
         raise
 
 def query_rag(query: str, top_k: int = 3) -> str:
-    """
-    Retrieve top_k relevant documents for the given query.
-
-    Args:
-        query (str): Natural language query.
-        top_k (int): Number of top results to retrieve.
-
-    Returns:
-        str: Concatenated content of top-k documents.
-    """
     global chroma_store
     if chroma_store is None:
         logger.error("Chroma vector store is not initialized.")
